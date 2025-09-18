@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Buoy Averages</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f8ff;
+    }
+    .triangle-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .triangle {
+      width: 0;
+      height: 0;
+      border-left: 60px solid transparent;
+      border-right: 60px solid transparent;
+      border-bottom: 104px solid #4CAF50;
+      position: relative;
+      text-align: center;
+    }
+    .triangle span {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      color: white;
+    }
+    .label {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="triangle-container">
+  <div>
+    <div class="triangle" id="waterTemp">
+      <span>-- °F</span>
+    </div>
+    <div class="label">Water Temp (°F)</div>
+  </div>
+  <div>
+    <div class="triangle" id="airTemp">
+      <span>-- °F</span>
+    </div>
+    <div class="label">Air Temp (°F)</div>
+  </div>
+  <div>
+    <div class="triangle" id="baro">
+      <span>--</span>
+    </div>
+    <div class="label">Barometric Pressure</div>
+  </div>
+</div>
+
+<script>
+  // CSV link from your published Google Sheet
+  const sheetCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSdJEMFFaONhtyaDh6C1hn42VSftOUH8bUMQN3RD-L4WXu46mntzuqkGgqKWBK0BbiZ58kdTuSnTDac/pub?output=csv';
+
+  async function fetchAverages() {
+    const res = await fetch(sheetCSV);
+    const text = await res.text();
+    const rows = text.split('\n').slice(-12); // last 12 readings
+    let waterSum = 0, airSum = 0, baroSum = 0, count = 0;
+
+    rows.forEach(row => {
+      const cols = row.split(',');
+      if(cols[2] && cols[4] && cols[5]) { // C=water, E=air, F=baro
+        waterSum += parseFloat(cols[2]);
+        airSum += parseFloat(cols[4]);
+        baroSum += parseFloat(cols[5]);
+        count++;
+      }
+    });
+
+    if(count > 0) {
+      document.querySelector('#waterTemp span').textContent = (waterSum/count).toFixed(1) + '°F';
+      document.querySelector('#airTemp span').textContent = (airSum/count).toFixed(1) + '°F';
+      document.querySelector('#baro span').textContent = (baroSum/count).toFixed(2);
+    }
+  }
+
+  fetchAverages();
+  // refresh every hour
+  setInterval(fetchAverages, 3600000);
+</script>
+
+</body>
+</html>
